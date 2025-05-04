@@ -1,2 +1,4 @@
 # gpts-notion-connector
 ChatGPTからNotionに記事を登録するための連携時に使うコード一覧
+
+zennで書いた記事用にコードを置いておく場所として作りました。

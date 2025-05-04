@@ -1,0 +1,848 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Notion API - Generic Article Creation, Update, Deletion & Retrieval",
+    "version": "v1.4.4"
+  },
+  "servers": [
+    {
+      "url": "Cloud flare WorksのURLを入力"
+    }
+  ],
+  "paths": {
+"/v1/pages": {
+  "post": {
+    "summary": "データベースに記事を追加します。",
+    "operationId": "createArticle",
+    "tags": ["Pages"],
+    "x-openai-isConsequential": false,
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "parent": {
+                "type": "object",
+                "properties": {
+                  "database_id": {
+                    "type": "string"
+                  }
+                },
+                "required": ["database_id"]
+              },
+              "properties": {
+                "type": "object",
+                "properties": {
+                  "名前": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "object",
+                              "properties": {
+                                "content": { "type": "string" }
+                              },
+                              "required": ["content"]
+                            }
+                          },
+                          "required": ["text"]
+                        }
+                      }
+                    },
+                    "required": ["title"]
+                  }
+                },
+                "required": ["名前"],
+                "additionalProperties": true
+              }
+            },
+            "required": ["parent", "properties"]
+          }
+        }
+      }
+    }
+  }
+}
+,
+    "/v1/blocks/{block_id}/children": {
+  "get": {
+    "summary": "指定したブロックの子ブロック一覧を取得します。",
+    "operationId": "getChildBlocksInGeneric",
+    "tags": ["Blocks"],
+    "x-openai-isConsequential": false,
+    "parameters": [
+      {
+        "name": "block_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "子ブロック一覧を返します。",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "security": [
+      {
+        "apiKey": []
+      }
+    ]
+  },
+  "patch": {
+    "summary": "指定したブロックに子ブロックを追加します（展開済みパス専用）。",
+    "description": "この操作では block_id を必ず URL パスに直接展開してください。例：`/v1/blocks/abc123/children`。params や body に block_id を含めるとエラーになります。",
+    "operationId": "appendChildrenToBlockExpanded",
+    "tags": ["Blocks"],
+"x-openai-isConsequential": false,
+    "parameters": [
+      {
+        "name": "block_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "この値は URL パスに埋め込まれる必要があります。例：`/v1/blocks/abc123/children`。params や body に含めてはいけません。"
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "$ref": "#/components/schemas/AppendPageContentRequest"
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "子ブロックが正常に追加されました。"
+      }
+    },
+    "security": [
+      {
+        "apiKey": []
+      }
+    ]
+  }
+}
+,
+    "/v1/blocks/{block_id}": {
+      "get": {
+        "summary": "指定したブロックを取得します。",
+        "operationId": "getBlockDetailInGeneric",
+        "tags": [
+          "Blocks"
+        ],
+        "x-openai-isConsequential": false,
+        "parameters": [
+          {
+            "name": "block_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ブロックの詳細情報を返します。"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      },
+      "patch": {
+        "summary": "指定したブロックを削除（アーカイブ）します。",
+        "operationId": "archiveBlockInGeneric",
+        "tags": [
+          "Blocks"
+        ],
+        "x-openai-isConsequential": false,
+        "parameters": [
+          {
+            "name": "block_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archived": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ],
+                    "description": "true を指定するとブロックがアーカイブ（削除）されます"
+                  }
+                },
+                "required": [
+                  "archived"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ブロックが正常にアーカイブされました。"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/databases/{database_id}/query": {
+      "post": {
+        "summary": "データベース内の全記事を取得します（ページネーション対応）。",
+        "operationId": "getAllArticlesFromGeneric",
+        "tags": [
+          "Databases"
+        ],
+        "x-openai-isConsequential": false,
+        "parameters": [
+          {
+            "name": "database_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "start_cursor": {
+                    "type": "string",
+                    "description": "続きの取得に使用されるカーソル"
+                  },
+                  "page_size": {
+                    "type": "integer",
+                    "description": "1回のリクエストで取得する件数（上限100）",
+                    "default": 10,
+                    "maximum": 100
+                  },
+                  "filter": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "フィルター条件（任意）"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "全記事のクエリ結果を返します（ページネーションあり）。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "next_cursor": {
+                      "type": "string"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/pages/{page_id}": {
+      "patch": {
+        "summary": "指定した記事のプロパティを更新します。",
+        "operationId": "updatePagePropertiesInGeneric",
+        "tags": [
+          "Pages"
+        ],
+        "x-openai-isConsequential": false,
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archived": {
+                    "type": "boolean"
+                  },
+                  "parent": {
+                    "type": "object",
+                    "description": "新しい親ブロックまたはページ",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "page_id",
+                          "block_id"
+                        ]
+                      },
+                      "page_id": {
+                        "type": "string"
+                      },
+                      "block_id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "properties"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "プロパティが正常に更新されました。"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      },
+      "get": {
+        "summary": "指定したページを取得します。",
+        "operationId": "getPageDetailInGeneric",
+        "tags": [
+          "Pages"
+        ],
+        "x-openai-isConsequential": false,
+        "parameters": [
+          {
+            "name": "page_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ページの詳細情報を返します。"
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    },
+    "/fetch_all_pages": {
+      "post": {
+        "summary": "Notionデータベースからページを全件取得します。",
+        "operationId": "fetchAllPagesFromGeneric",
+        "tags": [
+          "Databases"
+        ],
+        "x-openai-isConsequential": false,
+        "servers": [
+          {
+            "url": "https://somutyo-notion-proxy.uguisuiro777.workers.dev"
+          }
+        ],
+        "parameters": [
+          {
+            "name": "database_id",
+            "in": "query",
+            "description": "取得したいNotionデータベースのID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "データベース内の全記事を返します。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "パラメータが不足しています。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラーが発生しました。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKey": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppendPageContentRequest": {
+        "type": "object",
+        "properties": {
+          "children": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ParagraphBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/Heading1Block"
+                },
+                {
+                  "$ref": "#/components/schemas/Heading2Block"
+                },
+                {
+                  "$ref": "#/components/schemas/Heading3Block"
+                },
+                {
+                  "$ref": "#/components/schemas/BulletedListItemBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/NumberedListItemBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/ToDoBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/ToggleBlock"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "children"
+        ]
+      },
+      "ParagraphBlock": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "paragraph"
+            ]
+          },
+          "paragraph": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "paragraph"
+        ]
+      },
+      "Heading1Block": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "heading_1"
+            ]
+          },
+          "heading_1": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "heading_1"
+        ]
+      },
+      "Heading2Block": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "heading_2"
+            ]
+          },
+          "heading_2": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "heading_2"
+        ]
+      },
+      "Heading3Block": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "heading_3"
+            ]
+          },
+          "heading_3": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "heading_3"
+        ]
+      },
+      "BulletedListItemBlock": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "bulleted_list_item"
+            ]
+          },
+          "bulleted_list_item": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "bulleted_list_item"
+        ]
+      },
+      "NumberedListItemBlock": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "numbered_list_item"
+            ]
+          },
+          "numbered_list_item": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "numbered_list_item"
+        ]
+      },
+      "ToDoBlock": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "to_do"
+            ]
+          },
+          "to_do": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              },
+              "checked": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "to_do"
+        ]
+      },
+      "ToggleBlock": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "enum": [
+              "block"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "toggle"
+            ]
+          },
+          "toggle": {
+            "type": "object",
+            "properties": {
+              "rich_text": {
+                "$ref": "#/components/schemas/RichTextArray"
+              }
+            },
+            "required": [
+              "rich_text"
+            ]
+          }
+        },
+        "required": [
+          "object",
+          "type",
+          "toggle"
+        ]
+      },
+      "RichTextArray": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "text"
+              ]
+            },
+            "text": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "content"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "text"
+          ]
+        }
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization"
+      }
+    }
+  }
+}

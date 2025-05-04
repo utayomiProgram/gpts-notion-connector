@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "CloudflareWorksのURLを入力"
+      "url": "Cloudflare WorkersのURLを入力"
     }
   ],
   "paths": {

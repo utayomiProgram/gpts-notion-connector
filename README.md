@@ -1,0 +1,2 @@
+# gpts-notion-connector
+ChatGPTからNotionに記事を登録するための連携時に使うコード一覧

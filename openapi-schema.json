@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "Cloudflare WorkersのURLを入力"
+      "url": "https://api.notion.com"
     }
   ],
   "paths": {
@@ -16,6 +16,17 @@
     "operationId": "createArticle",
     "tags": ["Pages"],
     "x-openai-isConsequential": false,
+    "parameters": [
+      {
+        "in": "header",
+        "name": "Notion-Version",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "2022-06-28"
+        }
+      }
+    ],
     "requestBody": {
       "required": true,
       "content": {
@@ -83,7 +94,16 @@
         "required": true,
         "schema": {
           "type": "string"
-        }
+        } 
+      },
+      {
+      "name": "Notion-Version",
+      "in": "header",
+      "required": true,
+      "schema": {
+        "type": "string",
+        "example": "2022-06-28"
+      }
       }
     ],
     "responses": {
@@ -121,6 +141,15 @@
           "type": "string"
         },
         "description": "この値は URL パスに埋め込まれる必要があります。例：`/v1/blocks/abc123/children`。params や body に含めてはいけません。"
+      },
+      {
+      "name": "Notion-Version",
+      "in": "header",
+      "required": true,
+      "schema": {
+        "type": "string",
+        "example": "2022-06-28"
+      }
       }
     ],
     "requestBody": {
@@ -162,6 +191,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+          "name": "Notion-Version",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "2022-06-28"
+          }
           }
         ],
         "responses": {
@@ -190,6 +228,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+          "name": "Notion-Version",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "2022-06-28"
+          }
           }
         ],
         "requestBody": {
@@ -242,6 +289,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+          "name": "Notion-Version",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "2022-06-28"
+          }
           }
         ],
         "requestBody": {
@@ -257,9 +313,8 @@
                   },
                   "page_size": {
                     "type": "integer",
-                    "description": "1回のリクエストで取得する件数（上限100）",
-                    "default": 10,
-                    "maximum": 100
+                    "description": "1回のリクエストで取得する件数",
+                    "default": 10
                   },
                   "filter": {
                     "anyOf": [
@@ -327,6 +382,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+          "name": "Notion-Version",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "2022-06-28"
+          }
           }
         ],
         "requestBody": {
@@ -400,6 +464,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+          "name": "Notion-Version",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "2022-06-28"
+          }
           }
         ],
         "responses": {
@@ -413,77 +486,58 @@
           }
         ]
       }
-    },
-    "/fetch_all_pages": {
+    },"/v1/search": {
       "post": {
-        "summary": "Notionデータベースからページを全件取得します。",
-        "operationId": "fetchAllPagesFromGeneric",
-        "tags": [
-          "Databases"
-        ],
+        "summary": "Notion内のページおよびデータベースを検索します",
+        "operationId": "searchNotion",
         "x-openai-isConsequential": false,
-        "servers": [
-          {
-            "url": "https://somutyo-notion-proxy.uguisuiro777.workers.dev"
-          }
-        ],
         "parameters": [
           {
-            "name": "database_id",
-            "in": "query",
-            "description": "取得したいNotionデータベースのID",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
+          "name": "Notion-Version",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "example": "2022-06-28"
+          }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "データベース内の全記事を返します。",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "results": {
-                      "type": "array",
-                      "items": {
-                        "type": "object"
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "start_cursor": {
+                    "type": "string",
+                    "description": "続きの取得に使用されるカーソル"
+                  },
+                  "page_size": {
+                    "type": "integer",
+                    "description": "1回のリクエストで取得する件数",
+                    "default": 10
+                  },
+                  "filter": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "string",
+                        "enum": [
+                          "page",
+                          "database"
+                        ]
+                      },
+                      "property": {
+                        "type": "string",
+                        "enum": [
+                          "object"
+                        ]
+                        
                       }
-                    },
-                    "total": {
-                      "type": "integer"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "パラメータが不足しています。",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "サーバーエラーが発生しました。",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
                     }
                   }
                 }
@@ -491,11 +545,11 @@
             }
           }
         },
-        "security": [
-          {
-            "apiKey": []
+        "responses": {
+          "200": {
+            "description": "Successful search"
           }
-        ]
+        }
       }
     }
   },
